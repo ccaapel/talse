@@ -60,11 +60,11 @@ body.has-mini .wrap{padding-bottom:calc(var(--nav-h) + var(--safe-b) + 84px)}
 /* Formato B na abertura: cabeçalho compacto + lembrar hoje + próximo item + captura em 1 toque */
 .home-head{display:grid;gap:14px;padding-top:16px}
 .home-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
-.rev-pill{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--surf);font-size:13.5px;font-weight:600;color:var(--ink);text-transform:lowercase}
+.rev-pill{position:relative;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:var(--surf);font-size:13.5px;font-weight:600;color:var(--ink);text-transform:lowercase}
 .rev-pill.due{border-color:var(--acc);background:var(--acc-soft);color:var(--acc-txt)}
 .rev-pill b{font-weight:700}
 .pulse{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px}
-.pulse button{display:inline-flex;align-items:center;gap:5px;min-height:38px;border:0;background:none;padding:0 2px;color:var(--mut);font-size:13.5px;font-weight:500;text-transform:lowercase}
+.pulse button{display:inline-flex;align-items:center;gap:5px;min-height:44px;border:0;background:none;padding:0 2px;color:var(--mut);font-size:13.5px;font-weight:500;text-transform:lowercase}
 .pulse button:hover{color:var(--ink)}
 .pulse b{color:var(--ink);font-weight:650}
 .pulse svg.i{width:15px;height:15px}
@@ -98,7 +98,7 @@ h3.dia{font-size:13px;font-weight:600;color:var(--mut);margin:18px 0 0;text-tran
 :root[data-cor="escuro"] .btn.acc,:root[data-cor="penumbra"] .btn.acc{color:#101412}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-cor]) .btn.acc{color:#101412}}
 .btn:disabled{opacity:.42;cursor:default;transform:none}
-.btn.sm{min-height:42px;padding:0 12px;font-size:13px}
+.btn.sm{min-height:44px;padding:0 12px;font-size:13px}
 
 .list{list-style:none;margin:0;padding:0}
 .list>li{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);flex-wrap:wrap}
@@ -124,7 +124,7 @@ h3.dia{font-size:13px;font-weight:600;color:var(--mut);margin:18px 0 0;text-tran
 .busca svg.i{color:var(--mut)}
 .busca input{flex:1;min-width:0;border:0;background:none;padding:11px 0;font-size:16px;outline:none}
 .busca input::placeholder{color:var(--mut)}
-.chip{display:inline-flex;align-items:center;gap:6px;flex:none;min-height:42px;padding:0 13px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:13.5px;font-weight:500;white-space:nowrap;text-decoration:none;text-transform:lowercase}
+.chip{display:inline-flex;align-items:center;gap:6px;flex:none;min-height:44px;padding:0 13px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:13.5px;font-weight:500;white-space:nowrap;text-decoration:none;text-transform:lowercase}
 .chip svg.i{width:15px;height:15px}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .rolo{display:flex;gap:6px;overflow-x:auto;touch-action:pan-x;scrollbar-width:none;padding:2px}
@@ -133,13 +133,13 @@ h3.dia{font-size:13px;font-weight:600;color:var(--mut);margin:18px 0 0;text-tran
 /* Barra inferior compacta para iPhone (retrato, paisagem e PWA instalado) */
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);padding-bottom:var(--safe-b);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 .nav-in{max-width:680px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);align-items:center}
-.tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:var(--nav-h);min-height:44px;background:none;border:0;color:var(--mut);font-size:11px;font-weight:500;min-width:0;text-transform:lowercase;padding:0 2px}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:var(--nav-h);min-height:44px;background:none;border:0;color:var(--mut);font-size:12px;font-weight:500;min-width:0;text-transform:lowercase;padding:0 2px}
 .tab svg.i{width:19px;height:19px}
 .tab[aria-current="page"]{color:var(--ink);font-weight:600}
 .tab[aria-current="page"] svg.i{stroke-width:2;color:var(--acc-txt)}
-.tab .n{position:absolute;top:4px;left:calc(50% + 8px);font-size:10.5px;font-weight:700;color:var(--acc-txt)}
+.tab .n{position:absolute;top:4px;left:calc(50% + 8px);font-size:12px;font-weight:700;color:var(--acc-txt)}
 .mais{justify-self:center;position:relative;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;border:0;background:var(--ink);color:var(--bg)}
-.mais::after{content:"";position:absolute;inset:-4px}
+.mais::after{content:"";position:absolute;inset:-5px}
 .mais svg.i{width:20px;height:20px;stroke-width:2.1}
 .mais:active{transform:scale(.93)}
 
@@ -240,7 +240,7 @@ body.has-mini .toast{bottom:calc(var(--nav-h) + var(--safe-b) + 66px)}
 @media (orientation:landscape) and (max-height:500px){
   :root{--nav-h:40px;--safe-b:max(2px,calc(env(safe-area-inset-bottom,0px) - 10px))}
   .topo{min-height:40px}
-  .tab{flex-direction:row;gap:5px;font-size:11.5px}
+  .tab{flex-direction:row;gap:5px;font-size:12px}
   .tab .n{position:static;margin-left:2px}
   .mais{width:34px;height:34px}
   .home-head{gap:10px;padding-top:10px}
@@ -259,7 +259,7 @@ body.has-mini .toast{bottom:calc(var(--nav-h) + var(--safe-b) + 66px)}
   .sh{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 16px 8px;min-width:0}
   .sh h3{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:650;letter-spacing:0;margin:0 0 2px;text-transform:lowercase}
   .sh h3 svg.i{width:15px;height:15px;color:var(--mut)}
-  .sh h3 span{margin-left:auto;font-size:11px;font-weight:600;color:var(--mut);border:1px solid var(--line2);border-radius:var(--raio-bt);padding:0 6px}
+  .sh h3 span{margin-left:auto;font-size:12px;font-weight:600;color:var(--mut);border:1px solid var(--line2);border-radius:var(--raio-bt);padding:0 6px}
   .sh .row{padding:9px 0}
   .sh .row>svg.i{display:none}
   .sh .rtitle{font-size:14px;font-weight:500;-webkit-line-clamp:1}
