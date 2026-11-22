@@ -1040,6 +1040,13 @@ a.row{text-decoration:none;color:inherit}
 .porta-conta .conta-l input::placeholder{color:#9DB1B8}
 .g-btn{display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 18px 0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:#fff;color:#1f1f1f;font:600 15px var(--f);cursor:pointer;white-space:nowrap}
 .g-btn .g{width:20px;height:20px;flex:none}
+.g-btn.mini{min-height:36px;padding:0 12px 0 10px;font-size:13px;gap:6px}
+.g-btn.mini .g{width:16px;height:16px}
+.topo-conta{display:flex;align-items:center;margin-right:2px}
+.avatar{position:relative;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:none;cursor:pointer}
+.avatar img,.avatar span{width:36px;height:36px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px var(--acc)}
+.avatar span{display:grid;place-items:center;background:var(--acc);color:var(--acc-on);font-weight:800}
+.avatar .sync{position:absolute;right:4px;bottom:4px;width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 2px #000;animation:pisca 1s infinite}
 .g-btn:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 35%,transparent)}
 .conta-pill{min-height:44px;padding:0 16px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.5);color:#fff;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .conta-ok{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9FE3F5;display:flex;align-items:center;gap:6px;min-height:44px}
@@ -1067,6 +1074,7 @@ body.abrindo.ceu-ok .abertura{background:transparent}
   <header class="topo">
     <button class="marca" type="button" data-act="sala" id="brand-btn" aria-label="talse: voltar para a sala"></button>
     <div class="topo-r">
+      <span class="topo-conta" id="topo-conta"></span>
       <button class="ic" type="button" id="buscar" aria-label="buscar na estante"></button>
       <button class="ic" type="button" id="ajustes" aria-label="ajustes"></button>
       <button class="ic" type="button" id="share" aria-label="compartilhar o talse" hidden></button>
@@ -2670,6 +2678,7 @@ document.addEventListener('click',e=>{
   if(el.closest('#porta')&&portaClique(el,ds))return;
   if('fechafolha' in ds){fecharFolha();return;}
   if(ds.agtocar){feedTocar(ds.agtocar);return;}
+  if(el.id==='avatar-btn'){tapFeedback('tap');renderAjustes();return;}
   if(el.id==='buscar'){tapFeedback('tap');location.hash='estante';setTimeout(()=>{const q=$('q');if(q)q.focus();},60);return;}
   if('contaentra' in ds||'contasai' in ds||'contaapaga' in ds){if(window.Conta)window.Conta.clique(el,ds);return;}
   if(ds.tocar){tocarAqui(ds.tocar);return;}
@@ -2941,7 +2950,7 @@ function iniciarCeu(){
 function maybePorta(){
   if(prefs.entrada===false)return; /* só para testes automáticos */
   /* v5: a abertura pinta primeiro; a sala monta depois de dois quadros, sem disputar o fio */
-  abertura();requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(abrirPorta,60)));
+  abertura();setTimeout(abrirPorta,120);
 }
 const miniItem=it=>({id:it.id,title:it.title,type:it.type,label:(TYPE[it.type]||TYPE.outro).label,cor:lombHex(it),day:it.day,quando:fmtDay(it.day),due:it.due,words:it.words||0,url:safeHttpUrl(it.url)||'',host:hostOf(it.url||''),thumb:(midia(safeHttpUrl(it.url)||'')||{}).thumb||'',pag:it.pag?{valor:brl(it.pag.valor),venc:it.pag.venc}:null});
 const cenaApi={
@@ -3071,6 +3080,9 @@ window.Conta=(()=>{
       if(novo&&(!antes||antes.id!==novo.id)){setTimeout(sincronizar,0);if(ev==='SIGNED_IN')toast('conta conectada: seus itens vão para todos os aparelhos.');}
       renderConta();});
     try{const {data}=await sb.auth.getSession();user=data&&data.session?data.session.user:null;}catch(e){}
+    /* v5: se o Google devolveu erro, mostra o motivo exato e limpa o endereço */
+    try{const q=new URLSearchParams(location.search+'&'+location.hash.replace(/^#/,''));const er=q.get('error_description')||q.get('error');
+      if(er){toast('o login falhou: '+er.replace(/\+/g,' ').slice(0,120));console.warn('login:',er);history.replaceState(null,'',location.pathname+(VIEWS.includes(location.hash.slice(1))?location.hash:''));}}catch(e){}
     renderConta();if(user)sincronizar();
   }
   async function enviar(){
@@ -3118,9 +3130,17 @@ window.Conta=(()=>{
     if(user)return '<div class="grupo"><span>conta</span><p class="state" style="margin:0">'+esc(user.email||'')+' · '+(sincronizando?'sincronizando…':ultimaSync?'sincronizado':'conectado')+'</p><div class="foot" style="margin:0"><button class="btn sm" type="button" data-contasai>sair</button><button class="btn sm" type="button" data-contaapaga>apagar conta</button></div></div>';
     return '<div class="grupo"><span>conta</span>'+botaoGoogle()+'<small class="state" style="margin:0">seus itens aparecem no celular e no computador.</small></div>';
   }
+  /* v5: logado, o topo mostra a foto do Google (toque abre os ajustes da conta) */
+  function avatar(){
+    const m=(user&&user.user_metadata)||{};const foto=safeHttpUrl(m.avatar_url||m.picture||'');const nome=m.full_name||m.name||user.email||'conta';
+    return '<button class="avatar" type="button" id="avatar-btn" aria-label="sua conta: '+esc(nome)+'" title="'+esc(nome)+(sincronizando?' · sincronizando':'')+'">'+
+      (foto?'<img src="'+esc(foto)+'" alt="" referrerpolicy="no-referrer">':'<span>'+esc(String(nome).trim().charAt(0).toUpperCase())+'</span>')+(sincronizando?'<i class="sync"></i>':'')+'</button>';
+  }
   function renderConta(){
-    const box=$('porta-conta');
-    if(box){box.innerHTML=!pronto()||!sb?'':user?'<span class="mono conta-ok">'+(sincronizando?'sincronizando':'conta ativa')+'</span>':botaoGoogle();}
+    const box=$('porta-conta');const tc=$('topo-conta');
+    const h=!pronto()||!sb?'':user?avatar():botaoGoogle();
+    if(box)box.innerHTML=h;
+    if(tc)tc.innerHTML=!pronto()||!sb?'':user?avatar():'<button class="g-btn mini" type="button" data-contaentra aria-label="entrar com Google">'+botaoGoogle().match(/<svg[\s\S]*?<\/svg>/)[0]+'<span>entrar</span></button>';
     if(folhaTipo==='ajustes'&&!$('folha').hidden){const a=document.activeElement;if(!a||!/^conta-/.test(a.id||''))renderAjustes();}
   }
   function clique(el,ds){
@@ -3308,7 +3328,7 @@ async function mount(canvas,api){
   const texEst=madeira('#3E2716','#160B04');const matEst=M({map:texEst,roughness:.65});
   caixa(1.7,.7,.42,matEst,-2.05,.35,-2.05);
   { const cores=[0x8E2A2A,0x2F5D46,0x3A3F8F,0x22C7F0,0x2B59FF,0xFFC83D,0x7A2E5C,0xE8322B];const lst=[];let x=-2.85;
-    while(x<-1.3){const w=.03+rnd()*.035,h=.2+rnd()*.1;lst.push([x+w/2,.7+h/2,-2.08,w,h,.2,rnd()<.15?(rnd()-.5)*.3:0]);x+=w+.004+(rnd()<.08?.08:0);}
+    x=-2.0;while(x<-1.3){const w=.03+rnd()*.035,h=.2+rnd()*.1;lst.push([x+w/2,.7+h/2,-2.08,w,h,.2,rnd()<.15?(rnd()-.5)*.3:0]);x+=w+.004+(rnd()<.08?.08:0);}
     const im=new T.InstancedMesh(new T.BoxGeometry(1,1,1),M({roughness:.7}),lst.length);const q=new T.Quaternion(),e=new T.Euler(),cor=new T.Color();
     lst.forEach((c,i)=>{e.set(0,0,c[6]);q.setFromEuler(e);mm.compose(new T.Vector3(c[0],c[1],c[2]),q,new T.Vector3(c[3],c[4],c[5]));im.setMatrixAt(i,mm);im.setColorAt(i,cor.setHex(cores[i%cores.length]));});
     im.castShadow=true;scene.add(im);}
@@ -3325,8 +3345,10 @@ async function mount(canvas,api){
       const {GLTFLoader}=await import('./vendor/addons/GLTFLoader.js');
       const gltf=await new GLTFLoader().loadAsync('./models/'+nome+'.glb');
       const r=gltf.scene;const bx=new T.Box3().setFromObject(r);const sz=bx.getSize(new T.Vector3());
-      const k=o.altura/Math.max(.001,sz.y);r.scale.setScalar(k);
-      const bx2=new T.Box3().setFromObject(r);r.position.set(o.x,-bx2.min.y,o.z);r.rotation.y=o.rot||0;
+      const k=o.largura?o.largura/Math.max(.001,sz.x):o.altura/Math.max(.001,sz.y);r.scale.setScalar(k);
+      const bx2=new T.Box3().setFromObject(r);r.position.set(o.x,(o.y||0)-bx2.min.y+(o.y?0:0),o.z);
+      if(o.depois){r.updateMatrixWorld(true);o.depois(r,new T.Box3().setFromObject(r));}
+      r.rotation.y=o.rot||0;
       r.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;if(m.material&&m.material.map)m.material.map.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
         if(o.folhas&&/leaf|leaves|folha/i.test(m.name+' '+(m.material&&m.material.name)))plantasVivas.push({o:m,rx:m.rotation.x,rz:m.rotation.z,f:rnd()*6});}});
       scene.add(r);sombras();
@@ -3335,11 +3357,63 @@ async function mount(canvas,api){
       return r;
     }catch(e){return null;}
   }
+  /* v5 (D6): a sala mostra os itens nos objetos certos. TV = vídeo, notebook = X e artigos, toca-fitas = música,
+     calendário de papel = agenda, envelope = pagamentos, monitor = guardar. Sem livros soltos. */
+  const telasObj=[];let tvId=null,noteId=null,musId=null;
+  const texTV=tela(512,384),texNote=tela(512,320);
+  function telaPlana(r,box,fx,fy,fw,fh,tex,k){
+    const sz=box.getSize(new T.Vector3()),c=box.getCenter(new T.Vector3());
+    const m=new T.Mesh(new T.PlaneGeometry(sz.x*fw,sz.y*fh),new T.MeshBasicMaterial({map:tex,toneMapped:false}));
+    const p=new T.Vector3(c.x+sz.x*fx,c.y+sz.y*fy,box.max.z+.004);r.worldToLocal(p);m.position.copy(p);m.scale.divideScalar(r.scale.x);
+    r.add(m);fixos.push({o:m,k});return m;
+  }
   setTimeout(()=>{
-    modelo('potted_plant_04',{altura:1.05,x:-1.95,z:.45,rot:.4,folhas:true});
-    modelo('potted_plant_02',{altura:1.15,x:2.25,z:-1.55,rot:-.6,folhas:true});
+    modelo('metal_office_desk',{altura:TOPO,x:MX,z:-.35,rot:0}).then(r=>{if(!r)return;scene.traverse(o=>{if(o.isMesh&&o.material===matMesa)o.visible=false;});sombras();});
+    modelo('Television_01',{altura:.46,x:-2.4,y:.7,z:-2.0,rot:.35,depois:(r,b)=>telaPlana(r,b,-.09,.03,.62,.6,texTV,'tv')});
+    modelo('classic_laptop',{largura:.34,x:MX+.55,y:TOPO,z:-.42,rot:-.45}).then(r=>{if(!r)return;r.traverse(m=>{if(m.isMesh&&m.material&&/screen/i.test(m.material.name)){m.material=new T.MeshBasicMaterial({map:texNote,toneMapped:false});fixos.push({o:m,k:'note'});}});});
+    modelo('portable_cassette_player',{largura:.17,x:MX+.88,y:TOPO,z:.0,rot:-.3}).then(r=>{if(!r)return;r.traverse(m=>{if(m.isMesh)fixos.push({o:m,k:'musica'});});});
+    modelo('potted_plant_01',{altura:1.25,x:2.25,z:-1.55,rot:-.6,folhas:true});
     modelo('mid_century_lounge_chair',{altura:.82,x:1.5,z:1.05,rot:-2.5});
   },coarse?900:300);
+  tab.visible=false;
+  /* calendário de papel na parede: a agenda */
+  const texCal=tela(400,520);
+  const cal=new T.Mesh(new T.PlaneGeometry(.42,.546),M({map:texCal,roughness:.9}));cal.position.set(2.55,1.5,-2.26);cal.rotation.z=-.02;scene.add(cal);
+  const prego=new T.Mesh(new T.SphereGeometry(.012,8,6),M({color:0x888888,metalness:.8,roughness:.3}));prego.position.set(2.55,1.79,-2.25);scene.add(prego);
+  function desenharCal(){
+    const g=texCal.userData.g,w=400,h=520,d=new Date();const its=api.itens();const hoje=its.filter(x=>x.due&&x.due<=new Date().toISOString().slice(0,10));
+    g.fillStyle='#EDEAE3';g.fillRect(0,0,w,h);g.fillStyle='#C8352B';g.fillRect(0,0,w,92);
+    g.fillStyle='#fff';g.font='600 30px "Geist Mono","GMono L", monospace';g.textAlign='center';g.fillText(['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'][d.getMonth()],w/2,60);
+    g.fillStyle='#1b1b1b';g.font='800 190px -apple-system, "Segoe UI", Roboto, Arial, sans-serif';g.fillText(String(d.getDate()),w/2,280);
+    g.font='500 22px "Geist Mono","GMono L", monospace';g.fillStyle='#555';g.fillText(['DOMINGO','SEGUNDA','TERÇA','QUARTA','QUINTA','SEXTA','SÁBADO'][d.getDay()],w/2,325);
+    g.textAlign='left';g.font='600 20px -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+    const lista=its.filter(x=>x.due).slice(0,3);lista.forEach((x,i)=>{g.fillStyle=x.pag?'#1B6E46':'#C8352B';g.beginPath();g.arc(36,376+i*40,7,0,7);g.fill();g.fillStyle='#222';g.fillText(corta(g,x.pag?x.pag.valor+' · '+x.title:x.title,320),54,383+i*40);});
+    if(!lista.length){g.fillStyle='#777';g.fillText('nada para hoje',54,383);}
+    texCal.needsUpdate=true;void hoje;
+  }
+  /* envelope de pagamento na mesa: aparece quando há conta a pagar */
+  const env=new T.Group();env.position.set(MX-.55,TOPO+.004,.05);env.rotation.set(-Math.PI/2,0,.25);scene.add(env);
+  { const papel=M({color:0xE9E1D0,roughness:.95});const corpo=new T.Mesh(new T.BoxGeometry(.22,.12,.004),papel);env.add(corpo);
+    const aba=new T.Mesh(new T.CircleGeometry(.11,3),M({color:0xDCD2BE,roughness:.95}));aba.rotation.z=-Math.PI/2;aba.scale.set(.55,1,1);aba.position.set(0,.018,.0025);env.add(aba);
+    const selo=new T.Mesh(new T.CircleGeometry(.018,20),M({color:0x2FA36B,roughness:.5}));selo.position.set(.07,-.03,.003);env.add(selo); }
+  const envAlvo=new T.Mesh(new T.BoxGeometry(.24,.14,.03),new T.MeshBasicMaterial({visible:false}));env.add(envAlvo);
+  function desenharObjetos(){
+    const its=api.itens();
+    const v=its.find(x=>x.thumb&&(x.type==='youtube'||x.type==='video'))||its.find(x=>x.type==='youtube'||x.type==='video');tvId=v?v.id:null;
+    { const g=texTV.userData.g,w=512,h=384;g.fillStyle='#0a0f12';g.fillRect(0,0,w,h);
+      const img=v&&v.thumb?thumbs.get(v.thumb):null;
+      if(v&&v.thumb&&!img){const im=new Image();im.crossOrigin='anonymous';im.referrerPolicy='no-referrer';im.onload=()=>desenharObjetos();im.src=v.thumb;thumbs.set(v.thumb,im);}
+      if(img&&img.complete&&img.naturalWidth){try{const r=Math.max(w/img.naturalWidth,h/img.naturalHeight);g.drawImage(img,(w-img.naturalWidth*r)/2,(h-img.naturalHeight*r)/2,img.naturalWidth*r,img.naturalHeight*r);}catch(e){}}
+      else{g.fillStyle='#8fb0ba';g.font='500 22px "Geist Mono","GMono L", monospace';g.textAlign='center';g.fillText(v?'▶ '+corta(g,v.title,420):'sem vídeo guardado',w/2,h/2);g.textAlign='left';}
+      g.fillStyle='rgba(255,255,255,.05)';for(let y=0;y<h;y+=4)g.fillRect(0,y,w,1);texTV.needsUpdate=true; }
+    const n=its.find(x=>x.type==='grok'||x.type==='artigo'||x.type==='ia'||x.type==='conversa'||x.type==='busca');noteId=n?n.id:null;
+    { const g=texNote.userData.g,w=512,h=320;g.fillStyle='#000';g.fillRect(0,0,w,h);g.fillStyle='#E7E9EA';g.font='700 20px -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+      g.fillText(n?(n.host||n.label):'x.com',24,40);g.font='700 30px -apple-system, "Segoe UI", Roboto, Arial, sans-serif';const L=quebra(g,n?n.title:'guarde um post ou artigo',w-48).slice(0,5);L.forEach((l,i)=>g.fillText(l,24,92+i*38));
+      g.fillStyle='#71767B';g.font='500 16px "Geist Mono","GMono L", monospace';g.fillText('TOQUE PARA ABRIR',24,h-24);texNote.needsUpdate=true; }
+    const mu=its.find(x=>x.type==='musica');musId=mu?mu.id:null;
+    env.visible=its.some(x=>x.pag&&!x.pagoFeito);
+    desenharCal();
+  }
   /* costela-de-adão antiga: desligada no v4 (substituída pelos modelos acima) */
   if(false){
   const sMon=new T.Shape();sMon.moveTo(0,0);sMon.bezierCurveTo(-.22,.04,-.3,.32,-.1,.42);sMon.bezierCurveTo(-.04,.45,0,.4,0,.36);sMon.bezierCurveTo(0,.4,.04,.45,.1,.42);sMon.bezierCurveTo(.3,.32,.22,.04,0,0);
@@ -3374,7 +3448,7 @@ async function mount(canvas,api){
     scene.add(im);}
 
   /* ---------- esfera de órbitas: a agenda (ref. orbiting ellipse sphere + Gentle Monster) ---------- */
-  const ORB=new T.Group();ORB.position.set(1.72,1.3,-.55);scene.add(ORB);
+  const ORB=new T.Group();ORB.position.set(1.72,1.3,-.55);ORB.visible=false;scene.add(ORB);
   const coresOrb=[0xE8322B,0x2B59FF,0xFFC83D,0xF2EDE4,0x22C7F0];const aneis=[];
   for(let i=0;i<46;i++){const rr=.04+rnd()*.13;const an=new T.Mesh(new T.TorusGeometry(rr,.006+rnd()*.004,6,36),new T.MeshBasicMaterial({color:coresOrb[i%coresOrb.length],toneMapped:false}));
     const th=rnd()*Math.PI*2,ph=Math.acos(2*rnd()-1);const R=.38;an.position.set(R*Math.sin(ph)*Math.cos(th),R*Math.cos(ph),R*Math.sin(ph)*Math.sin(th));an.lookAt(0,0,0);an.scale.y=.55+rnd()*.45;an.userData.giro=(rnd()-.5)*2.2;
@@ -3442,7 +3516,7 @@ async function mount(canvas,api){
   }
   function construirLivros(){
     for(const m of livros.values())grupoLivros.remove(m);livros.clear();
-    const todos=api.itens().slice(0,coarse?36:56);const pilhas=new Map();
+    const todos=[];const pilhas=new Map();
     /* os 5 mais recentes ficam empilhados na mesa, lombada para a frente, título legível */
     let ya=TOPO;todos.slice(0,5).forEach((it,i)=>{
       const w=.34+((hashS(it.id)>>3)%7)*.012,h=.04+Math.min(.025,(it.words||0)/60000),d=.24;
@@ -3511,7 +3585,7 @@ async function mount(canvas,api){
   /* v4: sem número na esfera (N1); um ponto na cor do destaque quando há algo para hoje */
   function desenharNum(){const g=texNum.userData.g;g.clearRect(0,0,256,256);const n=api.due();g.textAlign='center';g.textBaseline='middle';
     g.font='500 26px "Geist Mono","GMono L", monospace';g.fillStyle='#E7E9EA';g.fillText('AGENDA',128,128);if(n){g.fillStyle='#'+ACC.getHexString();g.beginPath();g.arc(128,88,12,0,7);g.fill();}texNum.needsUpdate=true;}
-  function desenharTudo(){desenharMonitor();desenharTablet();desenharCelular();desenharNum();desenharKindle();}
+  function desenharTudo(){desenharMonitor();desenharTablet();desenharCelular();desenharNum();desenharKindle();desenharObjetos();}
 
   /* ---------- câmera e etiquetas com linha (I2) ---------- */
   const camPos=new T.Vector3(),camAlvo=new T.Vector3(),querPos=new T.Vector3(),querAlvo=new T.Vector3();
@@ -3524,8 +3598,8 @@ async function mount(canvas,api){
   const hots=api.hots();hots.innerHTML='<svg class="linhas" aria-hidden="true"></svg>';const svgL=hots.firstChild;
   const rotulos=[
     {k:'monitor',p:new T.Vector3(MON.x,MON.y+.34,MON.z),dx:-70,dy:-46,html:()=>'guardar'},
-    {k:'agenda',p:ORB.position.clone().add(new T.Vector3(.3,.3,0)),dx:60,dy:-50,html:()=>'agenda'},
-    {k:'estante',p:new T.Vector3(.9,.06,.6),dx:70,dy:-30,html:()=>'estante'},
+    {k:'agenda',p:new T.Vector3(2.55,1.78,-2.24),dx:-120,dy:-30,html:()=>'agenda'},
+    {k:'estante',p:new T.Vector3(-2.4,1.2,-2.0),dx:-30,dy:-60,html:()=>'estante'},
     {k:'ajustes',p:FAN.position.clone().add(new T.Vector3(0,.5,0)),dx:40,dy:-40,html:()=>'ajustes',so:true}
   ];
   for(const r of rotulos){const b=document.createElement('button');b.type='button';b.className='etq';b.innerHTML=r.html();r.el=b;hots.appendChild(b);
@@ -3536,7 +3610,7 @@ async function mount(canvas,api){
     const vis=modo==='sala';
     for(const r of rotulos){
       vtmp.copy(r.p).project(cam);const x=(vtmp.x*.5+.5)*W,y=(-vtmp.y*.5+.5)*H;
-      const mostra=vis&&vtmp.z<1&&(coarse?r.k==='monitor':(!r.so||sobreK==='fantasma'));
+      const mostra=vis&&vtmp.z<1&&(coarse?!r.so:(!r.so||sobreK==='fantasma'));
       const tx=Math.max(8,Math.min(W-160,x+r.dx)),ty=Math.max(70,Math.min(H-150,y+r.dy));
       r.el.style.opacity=mostra?'1':'0';r.el.style.visibility=mostra?'visible':'hidden';r.el.style.transform='translate('+tx+'px,'+ty+'px)';
       r.ln.setAttribute('x1',x);r.ln.setAttribute('y1',y);r.ln.setAttribute('x2',tx+(r.dx<0?r.el.offsetWidth:0));r.ln.setAttribute('y2',ty+22);r.ln.style.opacity=mostra?'1':'0';
@@ -3552,7 +3626,7 @@ async function mount(canvas,api){
 
   /* ---------- toque ---------- */
   const ray=new T.Raycaster(),ptr=new T.Vector2();let baixo=null;
-  const fixos=[{o:poster,k:'poster'},{o:telaMon,k:'monitor'},{o:orbAlvo,k:'agenda'},{o:fanAlvo,k:'fantasma'},{o:tabTela,k:'tab'},{o:celTela,k:'cel'},{o:vidro,k:'janela'},{o:kinTela,k:'kindle'}];
+  const fixos=[{o:poster,k:'poster'},{o:telaMon,k:'monitor'},{o:cal,k:'agenda'},{o:envAlvo,k:'envelope'},{o:fanAlvo,k:'fantasma'},{o:tabTela,k:'tab'},{o:celTela,k:'cel'},{o:vidro,k:'janela'},{o:kinTela,k:'kindle'}];
   function pegar(cx,cy){
     const r=canvas.getBoundingClientRect();ptr.set((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1);ray.setFromCamera(ptr,cam);
     const hit=ray.intersectObjects([...livros.values(),...fixos.map(a=>a.o)],true)[0];if(!hit)return null;
@@ -3579,7 +3653,11 @@ async function mount(canvas,api){
     else if(h.k==='fantasma')api.go('ajustes',e.clientX,e.clientY);
     else if(h.k==='janela')relampago();
     else if(h.k==='poster')api.go('estante',e.clientX,e.clientY);
-    else if(h.k==='kindle')api.go('pravoce',e.clientX,e.clientY);
+    else if(h.k==='kindle')api.go('fila',e.clientX,e.clientY);
+    else if(h.k==='tv'){if(tvId){modo='livro';porta.classList.add('foco');api.livro(tvId);}else api.go('fila',e.clientX,e.clientY);}
+    else if(h.k==='note'){if(noteId){modo='livro';porta.classList.add('foco');api.livro(noteId);}else api.go('fila',e.clientX,e.clientY);}
+    else if(h.k==='musica'){if(musId){modo='livro';porta.classList.add('foco');api.livro(musId);}else api.go('fila',e.clientX,e.clientY);}
+    else if(h.k==='envelope')api.go('agenda',e.clientX,e.clientY);
     else if(h.k==='tab'&&tabId){modo='livro';porta.classList.add('foco');api.livro(tabId);}
     else if(h.k==='cel'&&celId){modo='livro';porta.classList.add('foco');api.livro(celId);}
     else if(h.k==='livro'){puxar(h.id);api.livro(h.id);}
@@ -3601,7 +3679,7 @@ async function mount(canvas,api){
     const m=livros.get(id);if(!m)return;m.visible=false;voo={t:0,de:new T.Vector3(MON.x,MON.y,MON.z+.15),para:m.userData.base.clone(),m};bola.visible=true;}
 
   /* ---------- laço ---------- */
-  let raf=0,ultimo=0,rodando=false,inicio=0,piscar=0,degradou=false,medido=false,m0=0,mq=0,proxRaio=8+Math.random()*12;
+  let revela=0,raf=0,ultimo=0,rodando=false,inicio=0,piscar=0,degradou=false,medido=false,m0=0,mq=0,proxRaio=8+Math.random()*12;
   const fpsJanela=[];
   function quadro(agora){
     raf=requestAnimationFrame(quadro);
@@ -3618,7 +3696,8 @@ async function mount(canvas,api){
     if(voo){voo.t=Math.min(1,voo.t+dt*.95);const t=voo.t,e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;bola.position.lerpVectors(voo.de,voo.para,e);bola.position.y+=Math.sin(t*Math.PI)*.9;bola.rotation.x+=dt*9;bola.rotation.z+=dt*6;
       if(t>=1){bola.visible=false;voo.m.visible=true;voo.m.userData.alvo=3;const mm2=voo.m;setTimeout(()=>{mm2.userData.alvo=0;},500);voo=null;sombras();}}
     if(!calmo){ORB.children.forEach(c=>{if(c.userData.eixo)c.rotateOnAxis(c.userData.eixo,dt*c.userData.vel);});aneis.forEach(a=>a.rotateZ(dt*a.userData.giro));ORB.position.y=1.3+Math.sin(uT.value*.8)*.04;
-      FAN.position.y=1.55+Math.sin(uT.value*1.3)*.05;FAN.rotation.z=Math.sin(uT.value*.9)*.04;
+      FAN.position.y=1.55+Math.sin(uT.value*1.3)*.05;FAN.rotation.z=Math.sin(uT.value*.9)*.04;FAN.rotation.y+=((.15+(giro?giro[0]:px)*.6)-FAN.rotation.y)*Math.min(1,dt*3);
+      if(revela<1){revela=Math.min(1,revela+dt/2.6);renderer.toneMappingExposure=.15+1.15*(1-Math.pow(1-revela,3));}
       for(const p of plantasVivas){p.o.rotation.z=p.rz+Math.sin(uT.value*.9+p.f)*.022;p.o.rotation.x=p.rx+Math.cos(uT.value*.7+p.f)*.016;}}
     proxRaio-=dt;if(proxRaio<=0&&!calmo){flash=1;proxRaio=12+Math.random()*16;}
     flash=Math.max(0,flash-dt*3.2);const fl=flash>0?(Math.sin(flash*40)>0?flash:flash*.35):0;uFlash.value=fl;luzJanela.intensity=.75+fl*2.2;
