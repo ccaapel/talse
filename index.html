@@ -93,7 +93,7 @@ body.has-mini .wrap{padding-bottom:calc(var(--nav-h) + var(--safe-b) + 90px)}
 .banner{border-left:3px solid var(--acc);padding:8px 12px;margin:10px 0;font-size:14px;color:var(--ink2);background:var(--surf);border-radius:0 var(--raio) var(--raio) 0}
 
 /* ---------- Início: a mesa ---------- */
-.mesa{display:grid;gap:18px;padding-top:6px}
+.mesa{display:grid;grid-template-columns:minmax(0,1fr);gap:18px;padding-top:6px}
 .saud{font-family:var(--fd);font-size:clamp(1.9rem,7.4vw,2.9rem);line-height:1.02;font-weight:600;letter-spacing:-.035em;font-variation-settings:"SOFT" 100,"WONK" 1,"opsz" 144;margin:4px 0 0}
 .saud em{font-style:normal;color:var(--acc-txt)}
 .carimbos{display:flex;flex-wrap:wrap;gap:8px}
@@ -481,7 +481,7 @@ body.has-mini .toast{bottom:calc(var(--nav-h) + var(--safe-b) + 80px)}
   .wrap{max-width:1120px}
   section:not([data-view="inicio"])>*{max-width:780px;margin-left:auto;margin-right:auto}
   .topo{max-width:1120px}
-  .mesa{grid-template-columns:1.1fr 1fr;align-items:start;column-gap:32px}
+  .mesa{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start;column-gap:32px}
   .mesa .saud,.mesa .carimbos{grid-column:1/-1}
   .vitrine{grid-row:3}
   .aberto{grid-column:1;grid-row:4/span 2}
@@ -513,7 +513,9 @@ body.has-mini .toast{bottom:calc(var(--nav-h) + var(--safe-b) + 80px)}
 h3.dia,.grupo>span,.resumo .lbl{font-family:var(--fm);font-weight:500}
 .formato{font-family:var(--fs);font-style:italic;font-size:.42em;font-weight:400;vertical-align:super;margin-left:4px;letter-spacing:0;color:var(--mut)}
 /* carrossel de títulos */
-.vitrine{grid-column:1/-1;display:grid;gap:6px;min-width:0}
+.vitrine{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr);gap:6px;min-width:0;max-width:100%;overflow:hidden;contain:inline-size}
+.carimbos,.tira,.aberto,.saud{min-width:0;max-width:100%}
+.saud{overflow-wrap:anywhere}
 .vit-trilho{position:relative;overflow:hidden;margin:0 -16px;padding:4px 0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);touch-action:pan-y}
 .vit-fita{display:flex;align-items:baseline;gap:34px;width:max-content;transition:transform .7s var(--ease);will-change:transform}
 .vit-t{flex:none;min-height:44px;border:0;background:none;padding:0;color:var(--mut);font-family:var(--fs);font-style:italic;font-size:clamp(1.7rem,6.4vw,3.4rem);line-height:1.05;letter-spacing:-.02em;white-space:nowrap}
