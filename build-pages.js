@@ -7,16 +7,21 @@ const zlib = require('zlib');
 const root = __dirname;
 const out = path.join(root, 'docs');
 fs.mkdirSync(out, { recursive: true });
-/* Fontes guardadas no aparelho: com internet valem as do Google (todas as línguas); sem internet entram estas cópias (latim), para o cartaz não cair na fonte reserva. */
+/* Fontes guardadas no aparelho: com internet valem as do Google (todas as línguas); sem internet entram estas cópias (latim). */
 const src = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
-  .replace('--fd:"Anton",', '--fd:"Anton","Anton L",')
-  .replace('--f:"Plus Jakarta Sans",', '--f:"Plus Jakarta Sans","PJS L",');
-/* A fonte de cartaz (Anton) é opcional; a de texto é obrigatória. */
-if (!src.includes('"PJS L"')) throw new Error('token --f mudou em index.html: ajustar build-pages.js');
-const FONTS = ['anton-latin.woff2', 'plus-jakarta-sans-latin.woff2'];
+  .replace('--fd:"Fraunces",', '--fd:"Fraunces","Fraunces L",')
+  .replace('--f:"Instrument Sans",', '--f:"Instrument Sans","Inst L",')
+  .replace('--fs:"Instrument Serif",', '--fs:"Instrument Serif","InstS L",')
+  .replace('--fm:"IBM Plex Mono",', '--fm:"IBM Plex Mono","Plex L",');
+if (!src.includes('"Fraunces L"') || !src.includes('"Inst L"')) throw new Error('tokens --f/--fd mudaram em index.html: ajustar build-pages.js');
+const FONTS = ['fraunces-latin.woff2', 'instrument-sans-latin.woff2', 'instrument-serif-latin.woff2', 'instrument-serif-italic-latin.woff2', 'plex-mono-500-latin.woff2'];
 fs.mkdirSync(path.join(out, 'fonts'), { recursive: true });
-for (const f of [...FONTS, 'OFL-Anton.txt', 'OFL-PlusJakartaSans.txt']) fs.copyFileSync(path.join(root, 'fonts', f), path.join(out, 'fonts', f));
-const BG = '#101412';
+for (const f of [...FONTS, 'OFL-Fraunces.txt', 'OFL-InstrumentSans.txt', 'OFL-InstrumentSerif.txt', 'OFL-IBMPlexMono.txt']) fs.copyFileSync(path.join(root, 'fonts', f), path.join(out, 'fonts', f));
+/* Three.js local: a sala 3D abre sem internet */
+fs.mkdirSync(path.join(out, 'vendor'), { recursive: true });
+for (const f of ['three.module.min.js', 'LICENSE-three.txt']) fs.copyFileSync(path.join(root, 'vendor', f), path.join(out, 'vendor', f));
+for (const f of ['anton-latin.woff2', 'plus-jakarta-sans-latin.woff2', 'OFL-Anton.txt', 'OFL-PlusJakartaSans.txt']) { try { fs.unlinkSync(path.join(out, 'fonts', f)); } catch (e) {} }
+const BG = '#17120D';
 
 /* Página completa: o arquivo do Artifact não tem <html>, <head> nem <body> */
 const page = `<!doctype html>
@@ -28,11 +33,11 @@ const page = `<!doctype html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Stuff">
+<meta name="apple-mobile-web-app-title" content="Talse">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
-<style>@font-face{font-family:"Anton L";src:url(fonts/anton-latin.woff2) format("woff2");font-weight:400;font-display:swap}@font-face{font-family:"PJS L";src:url(fonts/plus-jakarta-sans-latin.woff2) format("woff2");font-weight:400 700;font-display:swap}:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>@font-face{font-family:"Fraunces L";src:url(fonts/fraunces-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}@font-face{font-family:"Inst L";src:url(fonts/instrument-sans-latin.woff2) format("woff2");font-weight:400 700;font-display:swap}@font-face{font-family:"InstS L";src:url(fonts/instrument-serif-latin.woff2) format("woff2");font-weight:400;font-display:swap}@font-face{font-family:"InstS L";src:url(fonts/instrument-serif-italic-latin.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}@font-face{font-family:"Plex L";src:url(fonts/plex-mono-500-latin.woff2) format("woff2");font-weight:500;font-display:swap}:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 ${src}
@@ -45,9 +50,9 @@ if('serviceWorker' in navigator){window.addEventListener('load',function(){navig
 fs.writeFileSync(path.join(out, 'index.html'), page);
 
 fs.writeFileSync(path.join(out, 'manifest.webmanifest'), JSON.stringify({
-  name: 'Stuff',
-  short_name: 'Stuff',
-  description: 'Guarde, leia, ouça e lembre o que te prende.',
+  name: 'Talse',
+  short_name: 'Talse',
+  description: 'Sua biblioteca de consumos: guarde, leia, ouça e lembre o que te prende.',
   lang: 'pt-BR',
   start_url: './',
   scope: './',
@@ -63,8 +68,8 @@ fs.writeFileSync(path.join(out, 'manifest.webmanifest'), JSON.stringify({
 }, null, 2));
 
 /* Service worker: abre o app mesmo sem internet (os dados já ficam no aparelho) */
-fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'stuff-v5';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'fonts/anton-latin.woff2', 'fonts/plus-jakarta-sans-latin.woff2'];
+fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v2';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'fonts/fraunces-latin.woff2', 'fonts/instrument-sans-latin.woff2', 'fonts/instrument-serif-latin.woff2', 'fonts/instrument-serif-italic-latin.woff2', 'fonts/plex-mono-500-latin.woff2', 'vendor/three.module.min.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
@@ -88,7 +93,7 @@ function bez(p0, p1, p2, p3, n = 24) {
   }
   return pts;
 }
-const GREEN = [0x6d, 0xb5, 0x9c], CLAY = [0xe5, 0x82, 0x5e], WHEAT = [0xe8, 0xc5, 0x6a];
+const GREEN = [0xf4, 0xeb, 0xda], CLAY = [0xf0, 0x8a, 0x6e], WHEAT = [0xf2, 0xd4, 0x5c];
 const strokes = [
   // página esquerda: M60 50 C48 40 30 38 14 44 v52 c16-6 34-4 46 6
   { c: GREEN, w: 5, p: [...bez([60, 50], [48, 40], [30, 38], [14, 44]), [14, 96], ...bez([14, 96], [30, 90], [48, 92], [60, 102])] },
@@ -116,7 +121,7 @@ function chunk(type, data) {
   return Buffer.concat([len, td, crc]);
 }
 function png(size, scale) {
-  const bg = [0x10, 0x14, 0x12];
+  const bg = [0x17, 0x12, 0x0d];
   const k = size * scale / 120, ox = (size - 120 * k) / 2, oy = (size - 120 * k) / 2 + 4 * k;
   const raw = Buffer.alloc((size * 3 + 1) * size);
   for (let y = 0; y < size; y++) {

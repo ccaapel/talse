@@ -1,13 +1,13 @@
 {
-  "name": "Stuff",
-  "short_name": "Stuff",
-  "description": "Guarde, leia, ouça e lembre o que te prende.",
+  "name": "Talse",
+  "short_name": "Talse",
+  "description": "Sua biblioteca de consumos: guarde, leia, ouça e lembre o que te prende.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#101412",
-  "theme_color": "#101412",
+  "background_color": "#17120D",
+  "theme_color": "#17120D",
   "icons": [
     {
       "src": "icon-192.png",
