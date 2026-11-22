@@ -9,19 +9,17 @@ const out = path.join(root, 'docs');
 fs.mkdirSync(out, { recursive: true });
 /* Fontes guardadas no aparelho: com internet valem as do Google (todas as línguas); sem internet entram estas cópias (latim). */
 const src = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
-  .replace('--fd:"Fraunces",', '--fd:"Fraunces","Fraunces L",')
-  .replace('--f:"Instrument Sans",', '--f:"Instrument Sans","Inst L",')
-  .replace('--fs:"Instrument Serif",', '--fs:"Instrument Serif","InstS L",')
-  .replace('--fm:"IBM Plex Mono",', '--fm:"IBM Plex Mono","Plex L",');
-if (!src.includes('"Fraunces L"') || !src.includes('"Inst L"')) throw new Error('tokens --f/--fd mudaram em index.html: ajustar build-pages.js');
-const FONTS = ['fraunces-latin.woff2', 'instrument-sans-latin.woff2', 'instrument-serif-latin.woff2', 'instrument-serif-italic-latin.woff2', 'plex-mono-500-latin.woff2'];
+  .replace(/"Bricolage Grotesque",/g, '"Bricolage Grotesque","Bric L",')
+  .replace(/"Geist Mono",/g, '"Geist Mono","GMono L",');
+if (!src.includes('"Bric L"') || !src.includes('"GMono L"')) throw new Error('tokens de fonte mudaram em index.html: ajustar build-pages.js');
+const FONTS = ['bricolage-latin.woff2', 'geist-mono-latin.woff2'];
+fs.rmSync(path.join(out, 'fonts'), { recursive: true, force: true });
 fs.mkdirSync(path.join(out, 'fonts'), { recursive: true });
-for (const f of [...FONTS, 'OFL-Fraunces.txt', 'OFL-InstrumentSans.txt', 'OFL-InstrumentSerif.txt', 'OFL-IBMPlexMono.txt']) fs.copyFileSync(path.join(root, 'fonts', f), path.join(out, 'fonts', f));
+for (const f of [...FONTS, 'OFL-BricolageGrotesque.txt', 'OFL-GeistMono.txt']) fs.copyFileSync(path.join(root, 'fonts', f), path.join(out, 'fonts', f));
 /* Three.js local: a sala 3D abre sem internet */
 fs.mkdirSync(path.join(out, 'vendor'), { recursive: true });
 for (const f of ['three.module.min.js', 'LICENSE-three.txt']) fs.copyFileSync(path.join(root, 'vendor', f), path.join(out, 'vendor', f));
-for (const f of ['anton-latin.woff2', 'plus-jakarta-sans-latin.woff2', 'OFL-Anton.txt', 'OFL-PlusJakartaSans.txt']) { try { fs.unlinkSync(path.join(out, 'fonts', f)); } catch (e) {} }
-const BG = '#17120D';
+const BG = '#0E0D0C';
 
 /* Página completa: o arquivo do Artifact não tem <html>, <head> nem <body> */
 const page = `<!doctype html>
@@ -37,7 +35,7 @@ const page = `<!doctype html>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
-<style>@font-face{font-family:"Fraunces L";src:url(fonts/fraunces-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}@font-face{font-family:"Inst L";src:url(fonts/instrument-sans-latin.woff2) format("woff2");font-weight:400 700;font-display:swap}@font-face{font-family:"InstS L";src:url(fonts/instrument-serif-latin.woff2) format("woff2");font-weight:400;font-display:swap}@font-face{font-family:"InstS L";src:url(fonts/instrument-serif-italic-latin.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}@font-face{font-family:"Plex L";src:url(fonts/plex-mono-500-latin.woff2) format("woff2");font-weight:500;font-display:swap}:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>@font-face{font-family:"Bric L";src:url(fonts/bricolage-latin.woff2) format("woff2");font-weight:200 800;font-stretch:75% 100%;font-display:swap}@font-face{font-family:"GMono L";src:url(fonts/geist-mono-latin.woff2) format("woff2");font-weight:400 600;font-display:swap}:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
 ${src}
@@ -68,8 +66,8 @@ fs.writeFileSync(path.join(out, 'manifest.webmanifest'), JSON.stringify({
 }, null, 2));
 
 /* Service worker: abre o app mesmo sem internet (os dados já ficam no aparelho) */
-fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v2';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'fonts/fraunces-latin.woff2', 'fonts/instrument-sans-latin.woff2', 'fonts/instrument-serif-latin.woff2', 'fonts/instrument-serif-italic-latin.woff2', 'fonts/plex-mono-500-latin.woff2', 'vendor/three.module.min.js'];
+fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v3';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'fonts/bricolage-latin.woff2', 'fonts/geist-mono-latin.woff2', 'vendor/three.module.min.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
@@ -82,29 +80,32 @@ self.addEventListener('fetch', e => {
 });
 `);
 
-/* Ícone: o mesmo livro aberto da animação de abertura, desenhado em traço (sem dependências).
-   Coordenadas na grade 120x120, iguais às do SVG em index.html. */
-function bez(p0, p1, p2, p3, n = 24) {
+/* Ícone: o fantasma do Talse (lençol creme, óculos pretos, livro laranja) sobre tinta. Grade 120x130. */
+function bez(p0, p1, p2, p3, n = 20) {
   const pts = [];
-  for (let i = 0; i <= n; i++) {
-    const t = i / n, u = 1 - t;
-    pts.push([u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0],
-              u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1]]);
-  }
+  for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t;
+    pts.push([u*u*u*p0[0]+3*u*u*t*p1[0]+3*u*t*t*p2[0]+t*t*t*p3[0], u*u*u*p0[1]+3*u*u*t*p1[1]+3*u*t*t*p2[1]+t*t*t*p3[1]]); }
   return pts;
 }
-const GREEN = [0xf4, 0xeb, 0xda], CLAY = [0xf0, 0x8a, 0x6e], WHEAT = [0xf2, 0xd4, 0x5c];
-const strokes = [
-  // página esquerda: M60 50 C48 40 30 38 14 44 v52 c16-6 34-4 46 6
-  { c: GREEN, w: 5, p: [...bez([60, 50], [48, 40], [30, 38], [14, 44]), [14, 96], ...bez([14, 96], [30, 90], [48, 92], [60, 102])] },
-  // página direita
-  { c: GREEN, w: 5, p: [...bez([60, 50], [72, 40], [90, 38], [106, 44]), [106, 96], ...bez([106, 96], [90, 90], [72, 92], [60, 102])] },
-  { c: GREEN, w: 5, p: [[60, 50], [60, 102]] },
-  // as três coisas que saem do livro
-  { c: CLAY, w: 4, p: Array.from({ length: 25 }, (_, i) => [44 + 5 * Math.cos(i / 24 * 6.2832), 22 + 5 * Math.sin(i / 24 * 6.2832)]) },
-  { c: WHEAT, w: 4, p: [[56, 8], [66, 8], [66, 18], [56, 18], [56, 8]] },
-  { c: CLAY, w: 4, p: [[74, 18], [83, 23], [74, 28], [74, 18]] }
+const circ = (cx, cy, r, n = 40) => Array.from({ length: n + 1 }, (_, i) => [cx + r * Math.cos(i / n * 6.2832), cy + r * Math.sin(i / n * 6.2832)]);
+const CREME = [0xf2, 0xed, 0xe4], TINTA = [0x0e, 0x0d, 0x0c], LARANJA = [0xff, 0xc8, 0x3d];
+const lencol = [...bez([60, 8], [33, 8], [20, 30], [20, 56]), [20, 108]];
+for (let k = 0; k < 5; k++) { const x = 20 + k * 16; lencol.push(...bez([x, 108], [x + 4, 115], [x + 12, 115], [x + 16, 108], 8)); }
+lencol.push([100, 56], ...bez([100, 56], [100, 30], [87, 8], [60, 8]));
+const shapes = [
+  { fill: true, c: CREME, p: lencol },
+  { c: TINTA, w: 3.2, p: lencol },
+  { c: TINTA, w: 4.5, p: circ(46, 48, 11) },
+  { c: TINTA, w: 4.5, p: circ(74, 48, 11) },
+  { c: TINTA, w: 3.5, p: [[57, 47], [60, 44], [63, 47]] },
+  { fill: true, c: TINTA, p: circ(48, 49, 2.8, 16) },
+  { fill: true, c: TINTA, p: circ(76, 49, 2.8, 16) },
+  { fill: true, c: LARANJA, p: [[30, 78], [60, 85], [90, 78], [90, 104], [60, 111], [30, 104], [30, 78]] },
+  { c: TINTA, w: 3, p: [[30, 78], [60, 85], [90, 78], [90, 104], [60, 111], [30, 104], [30, 78]] },
+  { c: TINTA, w: 2.4, p: [[60, 85], [60, 111]] }
 ];
+const dentro = (x, y, p) => { let d = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) d = !d; } return d; };
+const distSeg = (gx, gy, p) => { let best = 1e9; for (let i = 0; i < p.length - 1; i++) { const [x1, y1] = p[i], [x2, y2] = p[i + 1]; const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy || 1e-9; let t = ((gx - x1) * dx + (gy - y1) * dy) / l2; t = Math.max(0, Math.min(1, t)); const d = Math.hypot(gx - (x1 + t * dx), gy - (y1 + t * dy)); if (d < best) best = d; } return best; };
 function crc32(buf) {
   let c, crc = 0xffffffff;
   for (let n = 0; n < buf.length; n++) {
@@ -121,28 +122,23 @@ function chunk(type, data) {
   return Buffer.concat([len, td, crc]);
 }
 function png(size, scale) {
-  const bg = [0x17, 0x12, 0x0d];
-  const k = size * scale / 120, ox = (size - 120 * k) / 2, oy = (size - 120 * k) / 2 + 4 * k;
+  const bg = [0x22, 0xc7, 0xf0];
+  const k = size * scale / 130, ox = (size - 120 * k) / 2, oy = (size - 130 * k) / 2;
   const raw = Buffer.alloc((size * 3 + 1) * size);
   for (let y = 0; y < size; y++) {
     raw[y * (size * 3 + 1)] = 0;
     for (let x = 0; x < size; x++) {
       const gx = (x + .5 - ox) / k, gy = (y + .5 - oy) / k;
-      let col = bg, a = 0;
-      for (const s of strokes) {
-        let best = 1e9;
-        for (let i = 0; i < s.p.length - 1; i++) {
-          const [x1, y1] = s.p[i], [x2, y2] = s.p[i + 1];
-          const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy || 1e-9;
-          let t = ((gx - x1) * dx + (gy - y1) * dy) / l2; t = Math.max(0, Math.min(1, t));
-          const d = Math.hypot(gx - (x1 + t * dx), gy - (y1 + t * dy));
-          if (d < best) best = d;
-        }
-        const cov = Math.max(0, Math.min(1, (s.w / 2 - best) * k + .5)); // borda suave
-        if (cov > a) { a = cov; col = s.c; }
+      let col = bg.slice();
+      for (const s of shapes) {
+        const d = distSeg(gx, gy, s.p);
+        let cov;
+        if (s.fill) { const ins = dentro(gx, gy, s.p); cov = ins ? Math.min(1, .5 + d * k) : Math.max(0, .5 - d * k); }
+        else cov = Math.max(0, Math.min(1, (s.w / 2 - d) * k + .5));
+        if (cov > 0) for (let c = 0; c < 3; c++) col[c] = col[c] + (s.c[c] - col[c]) * cov;
       }
       const i = y * (size * 3 + 1) + 1 + x * 3;
-      for (let c = 0; c < 3; c++) raw[i + c] = Math.round(bg[c] + (col[c] - bg[c]) * a);
+      for (let c = 0; c < 3; c++) raw[i + c] = Math.round(col[c]);
     }
   }
   const ihdr = Buffer.alloc(13);
