@@ -1,5 +1,5 @@
-const V = 'talse-v3';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'fonts/bricolage-latin.woff2', 'fonts/geist-mono-latin.woff2', 'vendor/three.module.min.js'];
+const V = 'talse-v4';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'fonts/geist-mono-latin.woff2', 'vendor/three.module.min.js', 'vendor/addons/GLTFLoader.js', 'vendor/addons/BufferGeometryUtils.js', 'vendor/supabase.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

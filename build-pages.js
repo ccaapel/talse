@@ -7,19 +7,28 @@ const zlib = require('zlib');
 const root = __dirname;
 const out = path.join(root, 'docs');
 fs.mkdirSync(out, { recursive: true });
-/* Fontes guardadas no aparelho: com internet valem as do Google (todas as línguas); sem internet entram estas cópias (latim). */
+/* v4: texto na fonte do sistema (a mesma pilha do X); só a Geist Mono é baixada.
+   Com internet vale a do Google; sem internet entra a cópia local (latim). */
 const src = fs.readFileSync(path.join(root, 'index.html'), 'utf8')
-  .replace(/"Bricolage Grotesque",/g, '"Bricolage Grotesque","Bric L",')
   .replace(/"Geist Mono",/g, '"Geist Mono","GMono L",');
-if (!src.includes('"Bric L"') || !src.includes('"GMono L"')) throw new Error('tokens de fonte mudaram em index.html: ajustar build-pages.js');
-const FONTS = ['bricolage-latin.woff2', 'geist-mono-latin.woff2'];
+if (!src.includes('"GMono L"')) throw new Error('token de fonte mudou em index.html: ajustar build-pages.js');
+const FONTS = ['geist-mono-latin.woff2'];
 fs.rmSync(path.join(out, 'fonts'), { recursive: true, force: true });
 fs.mkdirSync(path.join(out, 'fonts'), { recursive: true });
-for (const f of [...FONTS, 'OFL-BricolageGrotesque.txt', 'OFL-GeistMono.txt']) fs.copyFileSync(path.join(root, 'fonts', f), path.join(out, 'fonts', f));
-/* Three.js local: a sala 3D abre sem internet */
-fs.mkdirSync(path.join(out, 'vendor'), { recursive: true });
-for (const f of ['three.module.min.js', 'LICENSE-three.txt']) fs.copyFileSync(path.join(root, 'vendor', f), path.join(out, 'vendor', f));
-const BG = '#0E0D0C';
+for (const f of [...FONTS, 'OFL-GeistMono.txt']) fs.copyFileSync(path.join(root, 'fonts', f), path.join(out, 'fonts', f));
+/* Three.js local + carregador de modelos: a sala 3D abre sem internet */
+fs.rmSync(path.join(out, 'vendor'), { recursive: true, force: true });
+fs.mkdirSync(path.join(out, 'vendor', 'addons'), { recursive: true });
+for (const f of ['three.module.min.js', 'LICENSE-three.txt', 'addons/GLTFLoader.js', 'addons/BufferGeometryUtils.js']) fs.copyFileSync(path.join(root, 'vendor', f), path.join(out, 'vendor', f));
+/* Modelos 3D da Poly Haven (CC0) */
+fs.rmSync(path.join(out, 'models'), { recursive: true, force: true });
+fs.mkdirSync(path.join(out, 'models'), { recursive: true });
+const MODELS = fs.readdirSync(path.join(root, 'models')).filter(f => /\.(glb|md)$/.test(f));
+for (const f of MODELS) fs.copyFileSync(path.join(root, 'models', f), path.join(out, 'models', f));
+/* Supabase (conta por e-mail): cópia local fixa, nunca de CDN solta */
+const SUPA = fs.existsSync(path.join(root, 'vendor', 'supabase.js'));
+if (SUPA) for (const f of fs.readdirSync(path.join(root, 'vendor')).filter(f => /supabase/i.test(f))) fs.copyFileSync(path.join(root, 'vendor', f), path.join(out, 'vendor', f));
+const BG = '#000000';
 
 /* Página completa: o arquivo do Artifact não tem <html>, <head> nem <body> */
 const page = `<!doctype html>
@@ -33,12 +42,13 @@ const page = `<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Talse">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-180.png">
-<style>@font-face{font-family:"Bric L";src:url(fonts/bricolage-latin.woff2) format("woff2");font-weight:200 800;font-stretch:75% 100%;font-display:swap}@font-face{font-family:"GMono L";src:url(fonts/geist-mono-latin.woff2) format("woff2");font-weight:400 600;font-display:swap}:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>@font-face{font-family:"GMono L";src:url(fonts/geist-mono-latin.woff2) format("woff2");font-weight:400 600;font-display:swap}:root{color-scheme:dark}html,body{background:#000}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
 </head>
 <body>
-${src}
+${SUPA ? '<script src="vendor/supabase.js"></script>\n' : ''}${src}
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 </script>
@@ -66,8 +76,8 @@ fs.writeFileSync(path.join(out, 'manifest.webmanifest'), JSON.stringify({
 }, null, 2));
 
 /* Service worker: abre o app mesmo sem internet (os dados já ficam no aparelho) */
-fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v3';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'fonts/bricolage-latin.woff2', 'fonts/geist-mono-latin.woff2', 'vendor/three.module.min.js'];
+fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v4';
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'fonts/geist-mono-latin.woff2', 'vendor/three.module.min.js', 'vendor/addons/GLTFLoader.js', 'vendor/addons/BufferGeometryUtils.js'${SUPA ? ", 'vendor/supabase.js'" : ''}];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
@@ -80,7 +90,9 @@ self.addEventListener('fetch', e => {
 });
 `);
 
-/* Ícone: o fantasma do Talse (lençol creme, óculos pretos, livro laranja) sobre tinta. Grade 120x130. */
+/* Ícone (v4): o mesmo fantasma da abertura (lençol creme, óculos pretos, livro azul oceano) sobre preto. Grade 120x130.
+   O favicon da aba é o SVG do fantasma, igual ao da abertura (pedido do Pedro, 22/11). */
+fs.writeFileSync(path.join(out, 'icon.svg'), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -2 132 132"><path fill="#F2EDE4" stroke="#0E0D0C" stroke-width="5" d="M60 8C33 8 20 30 20 56v52c5 7 10 7 15 0 5-7 10-7 15 0 5 7 10 7 15 0 5-7 10-7 15 0 5 7 10 7 15 0 5-7 10-7 5-10V56C100 30 87 8 60 8z"/><g fill="rgba(34,199,240,.18)" stroke="#0E0D0C" stroke-width="5" stroke-linecap="round"><circle cx="46" cy="48" r="11"/><circle cx="74" cy="48" r="11"/></g><path d="M57 47q3-4 6 0" fill="none" stroke="#0E0D0C" stroke-width="4" stroke-linecap="round"/><ellipse cx="48" cy="49" rx="3" ry="3.6" fill="#0E0D0C"/><ellipse cx="76" cy="49" rx="3" ry="3.6" fill="#0E0D0C"/><path fill="#22C7F0" stroke="#0E0D0C" stroke-width="4" stroke-linejoin="round" d="M30 78l30 7 30-7v26l-30 7-30-7z"/><path d="M60 85v26" stroke="#0E0D0C" stroke-width="3"/></svg>`);
 function bez(p0, p1, p2, p3, n = 20) {
   const pts = [];
   for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t;
@@ -88,7 +100,7 @@ function bez(p0, p1, p2, p3, n = 20) {
   return pts;
 }
 const circ = (cx, cy, r, n = 40) => Array.from({ length: n + 1 }, (_, i) => [cx + r * Math.cos(i / n * 6.2832), cy + r * Math.sin(i / n * 6.2832)]);
-const CREME = [0xf2, 0xed, 0xe4], TINTA = [0x0e, 0x0d, 0x0c], LARANJA = [0xff, 0xc8, 0x3d];
+const CREME = [0xf2, 0xed, 0xe4], TINTA = [0x0e, 0x0d, 0x0c], LARANJA = [0x22, 0xc7, 0xf0]; /* nome antigo: agora é o azul oceano do livro */
 const lencol = [...bez([60, 8], [33, 8], [20, 30], [20, 56]), [20, 108]];
 for (let k = 0; k < 5; k++) { const x = 20 + k * 16; lencol.push(...bez([x, 108], [x + 4, 115], [x + 12, 115], [x + 16, 108], 8)); }
 lencol.push([100, 56], ...bez([100, 56], [100, 30], [87, 8], [60, 8]));
@@ -122,7 +134,7 @@ function chunk(type, data) {
   return Buffer.concat([len, td, crc]);
 }
 function png(size, scale) {
-  const bg = [0x22, 0xc7, 0xf0];
+  const bg = [0x00, 0x00, 0x00];
   const k = size * scale / 130, ox = (size - 120 * k) / 2, oy = (size - 130 * k) / 2;
   const raw = Buffer.alloc((size * 3 + 1) * size);
   for (let y = 0; y < size; y++) {
