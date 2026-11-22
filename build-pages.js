@@ -164,4 +164,5 @@ fs.writeFileSync(path.join(out, 'icon-180.png'), png(180, 0.72));
 fs.writeFileSync(path.join(out, 'icon-192.png'), png(192, 0.72));
 fs.writeFileSync(path.join(out, 'icon-512.png'), png(512, 0.72));
 fs.writeFileSync(path.join(out, 'icon-512-maskable.png'), png(512, 0.56));
+fs.copyFileSync(path.join(root, 'privacidade.html'), path.join(out, 'privacidade.html'));
 console.log('docs/ gerado');
