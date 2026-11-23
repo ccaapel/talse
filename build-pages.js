@@ -76,7 +76,7 @@ fs.writeFileSync(path.join(out, 'manifest.webmanifest'), JSON.stringify({
 }, null, 2));
 
 /* Service worker: abre o app mesmo sem internet (os dados já ficam no aparelho) */
-fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v4';
+fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v6';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'fonts/geist-mono-latin.woff2', 'vendor/three.module.min.js', 'vendor/addons/GLTFLoader.js', 'vendor/addons/BufferGeometryUtils.js'${SUPA ? ", 'vendor/supabase.js'" : ''}];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
