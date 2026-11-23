@@ -1074,7 +1074,7 @@ body.ab-esconde>:not(#abertura):not(#ceu){visibility:hidden!important}
 .porta-topo,.doca{display:none!important}
 body.na-sala .topo{z-index:73;background:linear-gradient(rgba(0,0,0,.62),rgba(0,0,0,0));border-bottom:0;backdrop-filter:none;-webkit-backdrop-filter:none}
 body.na-sala .nav{z-index:72}
-body.na-sala .nav-in{background:rgba(0,0,0,.38);border-bottom-color:rgba(255,255,255,.08)}
+body.na-sala .nav-in{background:rgba(0,0,0,.74);border-bottom-color:rgba(255,255,255,.08)}
 body.na-sala .topo .marca,body.na-sala .topo .ic{color:#fff}
 .nav-in{position:relative}
 .nav-in>.pilula{display:block;position:absolute;left:0;top:6px;bottom:6px;width:0;border-radius:999px;background:color-mix(in srgb,var(--acc) 20%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 38%,transparent);transition:transform .34s var(--ease),width .34s var(--ease),opacity .2s;pointer-events:none;z-index:0;opacity:0}
@@ -1132,6 +1132,10 @@ body.na-sala .nav-in .tab{color:#B9C6CC}body.na-sala .nav-in .tab[aria-current="
 .pv-pl{display:flex;align-items:center;gap:6px;font-size:13px;color:#9FB4BC}
 .pv-pl svg.lg{width:14px;height:14px;fill:currentColor}
 .pv-tx strong{font-size:15px;line-height:1.3;color:#F2F6F7;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+/* contraste nos dois temas: cor da prévia segue o tema; dentro dos terminais escuros fica clara */
+.pv-tx strong{color:var(--ink)}.pv-pl{color:var(--mut)}
+.pv-card{background:rgba(127,127,127,.12);box-shadow:inset 0 0 0 1px rgba(127,127,127,.25)}
+.term3d .pv-tx strong,.p-mon .pv-tx strong{color:#F2F6F7}.term3d .pv-pl,.p-mon .pv-pl{color:#9FB4BC}
 #cap-card{margin:8px 0}
 :root[data-cor="claro"] #cap-card .pv-card{background:rgba(0,0,0,.04);box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
 :root[data-cor="claro"] #cap-card .pv-tx strong{color:#0F1419}:root[data-cor="claro"] #cap-card .pv-pl{color:#536471}
