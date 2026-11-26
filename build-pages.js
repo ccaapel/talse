@@ -24,6 +24,9 @@ for (const f of ['three.module.min.js', 'LICENSE-three.txt', 'addons/GLTFLoader.
 fs.rmSync(path.join(out, 'models'), { recursive: true, force: true });
 fs.mkdirSync(path.join(out, 'models'), { recursive: true });
 const MODELS = fs.readdirSync(path.join(root, 'models')).filter(f => /\.(glb|md)$/.test(f));
+/* v9: imagens próprias (o desenho do Pedro) */
+fs.rmSync(path.join(out, 'img'), { recursive: true, force: true });fs.mkdirSync(path.join(out, 'img'), { recursive: true });
+for (const f of fs.readdirSync(path.join(root, 'img')).filter(f => /\.(webp|png|jpg)$/.test(f))) fs.copyFileSync(path.join(root, 'img', f), path.join(out, 'img', f));
 for (const f of MODELS) fs.copyFileSync(path.join(root, 'models', f), path.join(out, 'models', f));
 /* Supabase (conta por e-mail): cópia local fixa, nunca de CDN solta */
 const SUPA = fs.existsSync(path.join(root, 'vendor', 'supabase.js'));
@@ -76,7 +79,7 @@ fs.writeFileSync(path.join(out, 'manifest.webmanifest'), JSON.stringify({
 }, null, 2));
 
 /* Service worker: abre o app mesmo sem internet (os dados já ficam no aparelho) */
-fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v6';
+fs.writeFileSync(path.join(out, 'sw.js'), `const V = 'talse-v9';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'fonts/geist-mono-latin.woff2', 'vendor/three.module.min.js', 'vendor/addons/GLTFLoader.js', 'vendor/addons/BufferGeometryUtils.js'${SUPA ? ", 'vendor/supabase.js'" : ''}];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
